@@ -11,6 +11,6 @@ extern Preferences preferences;
 String getDeviceId();
 void setupBLE();
 void sendBleData(String data);
-void bleDataReceiveCallback(String receivedData); // Fixed semicolon here
-
+void bleDataReceiveCallback(String receivedData); 
+bool askServerForMachineOwnerId(String machineId, String &ownerId);
 #endif // CONFIG_H

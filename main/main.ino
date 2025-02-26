@@ -31,6 +31,16 @@ void setup() {
       Serial.println("\nConnected to WiFi!");
       Serial.print("IP address: ");
       Serial.println(WiFi.localIP());
+      String deviceId = getDeviceId();
+      Serial.println(deviceId);
+      String ownerId;
+      bool success = askServerForMachineOwnerId(deviceId, ownerId);
+      
+      if (success) {
+        Serial.println("MACHINE_OWNER_ID:" + ownerId);
+      } else {
+        Serial.println("MACHINE_OWNER_ID:ERROR");
+      }
     } else {
       Serial.println("\nFailed to connect to WiFi.");
     }
@@ -109,17 +119,7 @@ void bleDataReceiveCallback(String receivedData) {
       sendBleData("WIFI_CONNECTED:INVALID_FORMAT");
     }
   }
-  else if (receivedData.startsWith("SET_USER_CREDENTIALS:")) {
-    // Format: SET_WIFI_CREDENTIALS:SSID,PASSWORD
-    int colonIndex = receivedData.indexOf(':');
-    String userId = receivedData.substring(colonIndex + 1);
-    // save credentials to non-volatile storage
-    preferences.begin("user", false);
-    preferences.putString("id", userId);
-    preferences.end();
-    sendBleData("USER_CREDENTIALS:"+userId);
-  }
-  else if (receivedData.startsWith("GET_USER_CREDENTIALS:")) {
+  else if (receivedData.startsWith("GET_MACHINE_OWNER:")) {
     preferences.begin("user", false);
     String userId = preferences.getString("id", "NONE");
     preferences.end();

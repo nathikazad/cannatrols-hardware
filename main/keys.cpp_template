@@ -1,0 +1,13 @@
+
+#ifndef KEYS_H
+#define KEYS_H
+#include "config.h"
+
+// MQTT broker details private
+const char* mqtt_broker = "xxxxxx.hivemq.cloud";
+const int mqtt_port = 8883;
+const char* mqtt_username = "username";
+const char* mqtt_password = "password";
+
+const char* server_api_key = "xxxxxxxxxxxxx";
+#endif // KEYS_H

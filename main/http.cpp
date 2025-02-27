@@ -1,7 +1,11 @@
 #include "config.h"
 #include <WiFi.h>
 #include <HTTPClient.h>
+// http.cpp
+#include <WiFiClientSecure.h>
 #include <ArduinoJson.h>
+#include "config.h"
+
 
 bool askServerForMachineOwnerId(String machineId, String &ownerId) {
   if (WiFi.status() != WL_CONNECTED) {
@@ -9,16 +13,20 @@ bool askServerForMachineOwnerId(String machineId, String &ownerId) {
     return false;
   }
 
+  WiFiClientSecure client;
+  client.setCACert(supabase_root_ca);
+
   HTTPClient http;
-  http.begin("https://edlquuxypulyedwgweai.supabase.co/functions/v1/get-machine-owner-id");
+  http.begin(client, "https://edlquuxypulyedwgweai.supabase.co/functions/v1/get-machine-owner-id");
   
   // Add headers
   http.addHeader("Content-Type", "application/json");
-  http.addHeader("X-API-Key", "493ac3f1-18a3-4d63-829b-1ae37b3062dc");
+  http.addHeader("X-API-Key", server_api_key);
   
   // Create JSON payload
   StaticJsonDocument<200> doc;
   doc["machineId"] = machineId;
+  doc["timestamp"] = millis();
   
   String requestBody;
   serializeJson(doc, requestBody);
@@ -44,21 +52,25 @@ bool askServerForMachineOwnerId(String machineId, String &ownerId) {
         preferences.begin("user", false);
         preferences.putString("id", ownerId);
         preferences.end();
+        http.end();
         return true;
       } else {
         Serial.println("API reported failure");
         preferences.begin("user", false);
         preferences.remove("id");
         preferences.end();
+        http.end();
         return false;
       }
       
     } else {
       Serial.println("JSON parsing failed: " + String(error.c_str()));
+      http.end();
       return false;
     }
   } else {
     Serial.println("HTTP Error: " + String(httpResponseCode));
+    http.end();
     return false;
   }
   

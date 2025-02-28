@@ -16,7 +16,8 @@ extern const char* server_api_key;
 extern const char* mqtt_root_ca;
 extern const char* supabase_root_ca;
 
-
+void setupMQTT();
+  
 void setupBLE();
 void sendBleData(String data);
 void bleDataReceiveCallback(String receivedData); 

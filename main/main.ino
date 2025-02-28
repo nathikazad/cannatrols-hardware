@@ -23,6 +23,7 @@ void setup() {
   }
   
   setupBLE();
+  setupMQTT();
 }
 
 bool connectToWifi(const char* ssid, const char* password) {

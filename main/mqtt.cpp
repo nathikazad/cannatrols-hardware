@@ -78,7 +78,7 @@ void reconnect() {
     return;
   }
   
-  Serial.println("WiFi connected. Connecting to MQTT Broker...");
+  Serial.println("WiFi connected and Owner Id Set. Connecting to MQTT Broker...");
   
   // Set a connection timeout - don't get stuck in an infinite loop
   unsigned long connectionStartTime = millis();

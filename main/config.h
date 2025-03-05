@@ -22,7 +22,7 @@ void setupBLE();
 void sendBleData(String data);
 void bleDataReceiveCallback(String receivedData); 
 
-bool askServerForMachineOwnerId(String machineId, String &ownerId);
+bool askServerForDeviceInfo(String machineId, String &ownerId, String &deviceName);
 
 String getDeviceId();
 bool getWiFiCredentials(String &ssid, String &password);

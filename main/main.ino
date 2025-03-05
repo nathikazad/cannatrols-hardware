@@ -48,10 +48,13 @@ void fetchAndSaveOwnerId() {
   String deviceId = getDeviceId();
   Serial.println("Device Id: "+ deviceId);
   String ownerId;
-  bool success = askServerForMachineOwnerId(deviceId, ownerId);
+  String deviceName;
+  bool success = askServerForDeviceInfo(deviceId, ownerId, deviceName);
   if (success) {
-    Serial.println("MACHINE_OWNER_ID:" + ownerId);
+    Serial.println("OWNER_ID:" + ownerId);
+    Serial.println("DEVICE_NAME:" + deviceName);
     saveOwnerId(ownerId);
+    saveDeviceName(deviceName);
   } else {
     Serial.println("MACHINE_OWNER_ID:ERROR");
   }
@@ -64,9 +67,9 @@ void bleDataReceiveCallback(String receivedData) {
   if (receivedData == "GET_DEVICE_ID") {
     sendBleData("DEVICE_ID:" + getDeviceId());
   }
-  else if (receivedData == "IS_INTERNET_CONNECTED") {
+  else if (receivedData == "IS_WIFI_CONNECTED") {
     bool isConnected = (WiFi.status() == WL_CONNECTED);
-    sendBleData("INTERNET_STATUS:" + String(isConnected ? "CONNECTED" : "DISCONNECTED"));
+    sendBleData("WIFI_CONNECTED:" + String(isConnected ? "SUCCESS" : "FAILED"));
   }
   else if (receivedData == "GET_WIFI_CREDENTIALS") {
     String ssid, password;

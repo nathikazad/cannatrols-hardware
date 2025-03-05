@@ -41,13 +41,11 @@ void generateChallenge(char* challenge, size_t length) {
   challenge[length - 1] = '\0'; // Ensure null termination
 }
 
-String calculateResponse(const char* challenge) {
-  String combined = String(challenge) + String(SECRET_KEY);
+String hash(String plainText) {
   String response = "";
-  
-  // Simple hash algorithm to make it non-trivial to reverse
-  for (size_t i = 0; i < combined.length(); i++) {
-    byte value = combined.charAt(i);
+    // Simple hash algorithm to make it non-trivial to reverse
+  for (size_t i = 0; i < plainText.length(); i++) {
+    byte value = plainText.charAt(i);
     
     // Mix in the secret key
     value ^= SECRET_KEY[i % strlen(SECRET_KEY)];
@@ -59,7 +57,6 @@ String calculateResponse(const char* challenge) {
     if (value < 16) response += "0";
     response += String(value, HEX);
   }
-  
   return response;
 }
 
@@ -100,7 +97,8 @@ class CharacteristicCallbacks: public BLECharacteristicCallbacks {
           } else if (receivedData.startsWith(RESPONSE_PREFIX)) {
             // Verify response
             String receivedResponse = receivedData.substring(strlen(RESPONSE_PREFIX));
-            String expectedResponse = calculateResponse(lastChallenge);
+            String combined = String(lastChallenge) + String(SECRET_KEY);
+            String expectedResponse = hash(combined);
             Serial.println(receivedResponse + " "+ expectedResponse);
             receivedResponse.trim();
             expectedResponse.trim();
@@ -135,12 +133,7 @@ class CharacteristicCallbacks: public BLECharacteristicCallbacks {
 
 void setupBLE() {
     // Setup BLE after WiFi to ensure proper resource allocation
-  preferences.begin("device", false);
-  String deviceName = preferences.getString("device", "NONE");
-  preferences.end();
-  if (deviceName.length() == 0) {
-    deviceName = getDeviceId();
-  }
+  String deviceName = getDeviceName();
   randomSeed(analogRead(0));
 
   // Create the BLE Device
@@ -184,11 +177,8 @@ void setupBLE() {
   BLEAdvertisementData advertisementData;
   advertisementData.setManufacturerData(manufacturerData);
 
-  preferences.begin("user", false);
-  String userId = preferences.getString("id", "NONE");
-  preferences.end();
-  BLEUUID userServiceUuid("FFF1");
-  advertisementData.setServiceData(userServiceUuid, userId);
+  BLEUUID deviceIdServiceUuid("FFF1");
+  advertisementData.setServiceData(deviceIdServiceUuid, getDeviceId());
 
   pAdvertising->setAdvertisementData(advertisementData);
   
@@ -197,7 +187,7 @@ void setupBLE() {
   pAdvertising->setMinPreferred(0x12);
   BLEDevice::startAdvertising();
   
-  Serial.println("BLE UART device ready");
+  Serial.println("BLE System Ready: "+ deviceName +" "+ getDeviceId());
   Serial.println("Waiting for client connection...");
 }
 

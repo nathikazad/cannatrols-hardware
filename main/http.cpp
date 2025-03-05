@@ -7,7 +7,7 @@
 #include "config.h"
 
 
-bool askServerForMachineOwnerId(String machineId, String &ownerId) {
+bool askServerForDeviceInfo(String machineId, String &ownerId, String &deviceName) {
   if (WiFi.status() != WL_CONNECTED) {
     Serial.println("WiFi not connected. Cannot fetch owner ID.");
     return false;
@@ -47,22 +47,12 @@ bool askServerForMachineOwnerId(String machineId, String &ownerId) {
       bool success = responseDoc["success"];
       if (success) {
         ownerId = responseDoc["user_id"].as<String>();
-        bool updated = responseDoc["updated"];
-        Serial.println("Owner ID: " + ownerId + ", Updated: " + String(updated ? "true" : "false"));
-        preferences.begin("user", false);
-        preferences.putString("id", ownerId);
-        preferences.end();
-        http.end();
-        return true;
+        deviceName = responseDoc["device_name"].as<String>();
       } else {
         Serial.println("API reported failure");
-        preferences.begin("user", false);
-        preferences.remove("id");
-        preferences.end();
-        http.end();
-        return false;
       }
-      
+      http.end();
+      return success;
     } else {
       Serial.println("JSON parsing failed: " + String(error.c_str()));
       http.end();

@@ -94,7 +94,11 @@ void reconnect() {
       Serial.println("Connected to MQTT Broker.");
       
       // Subscribe to frequency topic with device ID prefix
-      String subscriptionTopic = getOwnerId() + "/" + getDeviceId() + "/" + topic_subscribe_ir;
+      String ownerId = getOwnerId();
+      if (ownerId == "null") {
+        ownerId = "Unregistered";
+      }
+      String subscriptionTopic = ownerId + "/" + getDeviceId() + "/" + topic_subscribe_ir;
       mqttClient.subscribe(subscriptionTopic.c_str());
       Serial.print("Subscribed to: ");
       Serial.println(subscriptionTopic);
@@ -129,7 +133,7 @@ void mqttTask(void *parameter) {
         
         // Check if it's time to publish based on frequency
         unsigned long currentTime = millis();
-        unsigned long publishInterval = 1000 / frequency;
+        unsigned long publishInterval = 60000 / frequency;
         
         if (currentTime - lastPublishTime >= publishInterval) {
           // Create a JSON document with timestamp for security
@@ -155,6 +159,7 @@ void mqttTask(void *parameter) {
       }
     } else {
       Serial.println("WiFi disconnected. Waiting for reconnection...");
+      vTaskDelay(5000 / portTICK_PERIOD_MS);
     }
     
     // Short delay for task yield - prevents watchdog timer issues

@@ -38,13 +38,22 @@ public:
     double dewPoint = 0;
     unsigned long timeLeft = 0; // in milliseconds
     Cycle cycle = store;
-    double targetTemperature = 0;
-    double targetDewPoint = 0;
-    unsigned long targetTime = 0; // in seconds
     StepMode stepMode = step;
 };
 
 extern State state;
+
+class Target {
+public:
+    double temperature = 0;
+    double dewPoint = 0;
+    unsigned long time = 0; // in seconds
+    StepMode stepMode = step;
+};
+
+extern Target storeTarget;
+extern Target cureTarget;
+extern Target dryTarget;
 
 void setupMQTT();
 Cycle stringToCycle(String cycle);

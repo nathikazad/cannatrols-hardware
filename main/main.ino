@@ -3,6 +3,10 @@
 #include <WiFi.h>
 
 State state;
+Target storeTarget;
+Target cureTarget;
+Target dryTarget;
+
 void setup() {
   Serial.begin(115200);
   loadState();

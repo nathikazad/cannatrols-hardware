@@ -48,21 +48,39 @@ void saveOwnerId(const String &ownerId) {
 
 void saveState() {
   preferences.begin("state", false);
-  preferences.putFloat("targetTemperature", state.targetTemperature);
-  preferences.putFloat("targetDewPoint", state.targetDewPoint);
-  preferences.putFloat("targetTime", state.targetTime);
   preferences.putString("cycle", cycleToString(state.cycle));
   preferences.putString("stepMode", stepModeToString(state.stepMode));
+  preferences.putFloat("storeTargetTemperature", storeTarget.temperature);
+  preferences.putFloat("storeTargetDewPoint", storeTarget.dewPoint);
+  preferences.putFloat("storeTargetTime", storeTarget.time);
+  preferences.putString("storeTargetStepMode", stepModeToString(storeTarget.stepMode));
+  preferences.putFloat("cureTargetTemperature", cureTarget.temperature);
+  preferences.putFloat("cureTargetDewPoint", cureTarget.dewPoint);
+  preferences.putFloat("cureTargetTime", cureTarget.time);
+  preferences.putString("cureTargetStepMode", stepModeToString(cureTarget.stepMode));
+  preferences.putFloat("dryTargetTemperature", dryTarget.temperature);
+  preferences.putFloat("dryTargetDewPoint", dryTarget.dewPoint);
+  preferences.putFloat("dryTargetTime", dryTarget.time);
+  preferences.putString("dryTargetStepMode", stepModeToString(dryTarget.stepMode));
   preferences.end();
 }
 
 void loadState() {
   preferences.begin("state", false);
-  state.targetTemperature = preferences.getFloat("targetTemperature", 68.0);
-  state.targetDewPoint = preferences.getFloat("targetDewPoint", 54.0);
-  state.targetTime = preferences.getFloat("targetTime", 0);
   state.cycle = stringToCycle(preferences.getString("cycle", "store"));
   state.stepMode = stringToStepMode(preferences.getString("stepMode", "step"));
+  storeTarget.temperature = preferences.getFloat("storeTargetTemperature", 68.0);
+  storeTarget.dewPoint = preferences.getFloat("storeTargetDewPoint", 54.0);
+  storeTarget.time = preferences.getFloat("storeTargetTime", 0);
+  storeTarget.stepMode = stringToStepMode(preferences.getString("storeTargetStepMode", "step"));
+  cureTarget.temperature = preferences.getFloat("cureTargetTemperature", 68.0);
+  cureTarget.dewPoint = preferences.getFloat("cureTargetDewPoint", 54.0);
+  cureTarget.time = preferences.getFloat("cureTargetTime", 0);
+  cureTarget.stepMode = stringToStepMode(preferences.getString("cureTargetStepMode", "step"));
+  dryTarget.temperature = preferences.getFloat("dryTargetTemperature", 68.0);
+  dryTarget.dewPoint = preferences.getFloat("dryTargetDewPoint", 54.0);
+  dryTarget.time = preferences.getFloat("dryTargetTime", 0);
+  dryTarget.stepMode = stringToStepMode(preferences.getString("dryTargetStepMode", "step"));
   preferences.end();
 }
 

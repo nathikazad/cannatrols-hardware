@@ -46,7 +46,7 @@ StepMode stringToStepMode(String stepMode) {
   if (stepMode == "slope") return slope;
   return step;
 }
-
+// TODO: Create a separate topic only for targets and only publish targets on connect or when a command is received
 void publishState()
 {
   StaticJsonDocument<200> doc;
@@ -56,11 +56,19 @@ void publishState()
   doc["isPlaying"] = state.isPlaying;
   doc["timeLeft"] = state.timeLeft/1000;
   doc["cycle"] = cycleToString(state.cycle);
-  doc["targetTemperature"] = state.targetTemperature;
-  doc["targetDewPoint"] = state.targetDewPoint;
   doc["stepMode"] = stepModeToString(state.stepMode);
-  doc["targetTime"] = state.targetTime;
-
+  doc["storeTargetTemperature"] = storeTarget.temperature;
+  doc["storeTargetDewPoint"] = storeTarget.dewPoint;
+  doc["storeTargetTime"] = storeTarget.time;
+  doc["storeTargetStepMode"] = stepModeToString(storeTarget.stepMode);
+  doc["cureTargetTemperature"] = cureTarget.temperature;
+  doc["cureTargetDewPoint"] = cureTarget.dewPoint;
+  doc["cureTargetTime"] = cureTarget.time;
+  doc["cureTargetStepMode"] = stepModeToString(cureTarget.stepMode);
+  doc["dryTargetTemperature"] = dryTarget.temperature;
+  doc["dryTargetDewPoint"] = dryTarget.dewPoint;
+  doc["dryTargetTime"] = dryTarget.time;
+  doc["dryTargetStepMode"] = stepModeToString(dryTarget.stepMode);
   // Serialize to string
   String messagePayload;
   serializeJson(doc, messagePayload);

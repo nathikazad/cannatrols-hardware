@@ -38,7 +38,6 @@ public:
     double dewPoint = 0;
     unsigned long timeLeft = 0; // in milliseconds
     Cycle cycle = store;
-    StepMode stepMode = step;
 };
 
 extern State state;

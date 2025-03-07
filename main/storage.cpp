@@ -49,7 +49,6 @@ void saveOwnerId(const String &ownerId) {
 void saveState() {
   preferences.begin("state", false);
   preferences.putString("cycle", cycleToString(state.cycle));
-  preferences.putString("stepMode", stepModeToString(state.stepMode));
   preferences.putFloat("storeTargetTemperature", storeTarget.temperature);
   preferences.putFloat("storeTargetDewPoint", storeTarget.dewPoint);
   preferences.putFloat("storeTargetTime", storeTarget.time);
@@ -68,7 +67,6 @@ void saveState() {
 void loadState() {
   preferences.begin("state", false);
   state.cycle = stringToCycle(preferences.getString("cycle", "store"));
-  state.stepMode = stringToStepMode(preferences.getString("stepMode", "step"));
   storeTarget.temperature = preferences.getFloat("storeTargetTemperature", 68.0);
   storeTarget.dewPoint = preferences.getFloat("storeTargetDewPoint", 54.0);
   storeTarget.time = preferences.getFloat("storeTargetTime", 0);

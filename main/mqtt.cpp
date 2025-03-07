@@ -56,7 +56,6 @@ void publishState()
   doc["isPlaying"] = state.isPlaying;
   doc["timeLeft"] = state.timeLeft/1000;
   doc["cycle"] = cycleToString(state.cycle);
-  doc["stepMode"] = stepModeToString(state.stepMode);
   doc["storeTargetTemperature"] = storeTarget.temperature;
   doc["storeTargetDewPoint"] = storeTarget.dewPoint;
   doc["storeTargetTime"] = storeTarget.time;

@@ -2,9 +2,10 @@
 #include "config.h"
 #include <WiFi.h>
 
+State state;
 void setup() {
   Serial.begin(115200);
-  
+  loadState();
   String ssid, password;
   bool wifiCredentialsSet = getWiFiCredentials(ssid, password);
   if (wifiCredentialsSet) {

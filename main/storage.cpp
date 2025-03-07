@@ -1,5 +1,5 @@
 #include <Preferences.h>
-
+#include "config.h"
 Preferences preferences;
 
 String getDeviceId() {
@@ -44,6 +44,26 @@ void saveOwnerId(const String &ownerId) {
   preferences.putString("id", ownerId);
   preferences.end();
   Serial.println("Owner id saved: " + ownerId);
+}
+
+void saveState() {
+  preferences.begin("state", false);
+  preferences.putFloat("targetTemperature", state.targetTemperature);
+  preferences.putFloat("targetDewPoint", state.targetDewPoint);
+  preferences.putFloat("targetTime", state.targetTime);
+  preferences.putString("cycle", cycleToString(state.cycle));
+  preferences.putString("stepMode", stepModeToString(state.stepMode));
+  preferences.end();
+}
+
+void loadState() {
+  preferences.begin("state", false);
+  state.targetTemperature = preferences.getFloat("targetTemperature", 68.0);
+  state.targetDewPoint = preferences.getFloat("targetDewPoint", 54.0);
+  state.targetTime = preferences.getFloat("targetTime", 0);
+  state.cycle = stringToCycle(preferences.getString("cycle", "store"));
+  state.stepMode = stringToStepMode(preferences.getString("stepMode", "step"));
+  preferences.end();
 }
 
 String getOwnerId() {

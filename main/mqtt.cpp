@@ -13,14 +13,71 @@ const char* topic_subscribe_ir = "command";
 TaskHandle_t mqttTaskHandle = NULL;
 
 // Publishing control
-int frequency = 1; // per second
 unsigned long lastPublishTime = 0;
+unsigned long lastRunTime = 0;
 
 void mqttTask(void *parameter);
 
 // Create instances
 WiFiClientSecure mqttSecureClient;
 PubSubClient mqttClient(mqttSecureClient);
+
+Cycle stringToCycle(String cycle) {
+  if (cycle == "store") return store;
+  if (cycle == "dry") return dry;
+  if (cycle == "cure") return cure;
+  return store;
+}
+String cycleToString(Cycle cycle) {
+  if (cycle == store) return "store";
+  if (cycle == dry) return "dry";
+  if (cycle == cure) return "cure";
+  return "store";
+}
+
+String stepModeToString(StepMode stepMode) {
+  if (stepMode == step) return "step";
+  if (stepMode == slope) return "slope";
+  return "step";
+}
+
+StepMode stringToStepMode(String stepMode) {
+  if (stepMode == "step") return step;
+  if (stepMode == "slope") return slope;
+  return step;
+}
+
+void publishState()
+{
+  StaticJsonDocument<200> doc;
+  doc["temperature"] = state.temperature;
+  doc["humidity"] = state.humidity;
+  doc["dewPoint"] = state.dewPoint;
+  doc["isPlaying"] = state.isPlaying;
+  doc["timeLeft"] = state.timeLeft/1000;
+  doc["cycle"] = cycleToString(state.cycle);
+  doc["targetTemperature"] = state.targetTemperature;
+  doc["targetDewPoint"] = state.targetDewPoint;
+  doc["stepMode"] = stepModeToString(state.stepMode);
+  doc["targetTime"] = state.targetTime;
+
+  // Serialize to string
+  String messagePayload;
+  serializeJson(doc, messagePayload);
+
+  Serial.println(messagePayload);
+
+  // Publish with QoS 1 to deviceId()/temperature
+  String publishTopic = getOwnerId() + "/" + getDeviceId() + "/" + topic_publish_ir;
+  bool published = mqttClient.publish(publishTopic.c_str(), messagePayload.c_str(), true);
+
+  if (!published) {
+    Serial.println("Failed to publish message");
+  } else {
+    Serial.println("Message published successfully");
+  }
+  lastPublishTime = millis(); 
+}
 
 // Callback function for MQTT messages
 void callback(char* topic, byte* payload, unsigned int length) {
@@ -37,14 +94,10 @@ void callback(char* topic, byte* payload, unsigned int length) {
   // Check if it's the frequency topic
   String topicStr = String(topic);
   if (topicStr.endsWith(topic_subscribe_ir)) {
-    // Parse the frequency value
-    int newFrequency = atoi(message);
-    if (newFrequency > 0) {
-      // Update frequency directly - no mutex needed as callback runs in same task context
-      frequency = newFrequency;
-      Serial.print("Frequency updated to: ");
-      Serial.println(newFrequency);
-    }
+    // parse {"command":"advanceCycle","cycle":"dry"}
+    StaticJsonDocument<200> doc;
+    deserializeJson(doc, message);
+    commandCallback(doc);
   }
 }
 
@@ -121,6 +174,18 @@ void mqttTask(void *parameter) {
   
   // Run indefinitely
   for (;;) {
+    if((state.cycle == cure || state.cycle == dry) && state.isPlaying && state.timeLeft > 0) {
+      unsigned long timeElapsed = millis() - lastRunTime;
+      if (timeElapsed > state.timeLeft) {
+        timeElapsed = state.timeLeft;
+      }
+      state.timeLeft = state.timeLeft - timeElapsed;
+      if (state.timeLeft == 0) {
+        timeLeftReachedZeroCallback();
+      }
+    }
+    lastRunTime = millis();
+    measureMetrics();
     // Check WiFi and MQTT connection
     if (WiFi.status() == WL_CONNECTED && !ownerIdIsNone()) {
       if (!mqttClient.connected()) {
@@ -133,28 +198,10 @@ void mqttTask(void *parameter) {
         
         // Check if it's time to publish based on frequency
         unsigned long currentTime = millis();
-        unsigned long publishInterval = 60000 / frequency;
         
-        if (currentTime - lastPublishTime >= publishInterval) {
+        if (currentTime - lastPublishTime >= MQTT_PUBLISH_INTERVAL_MS * 1000) {
           // Create a JSON document with timestamp for security
-          StaticJsonDocument<200> doc;
-          doc["temperature"] = 10;
-          doc["timestamp"] = currentTime;
-          
-          // Serialize to string
-          String messagePayload;
-          serializeJson(doc, messagePayload);
-          
-          // Publish with QoS 1 to deviceId()/temperature
-          String publishTopic = getOwnerId() + "/" + getDeviceId() + "/" + topic_publish_ir;
-          bool published = mqttClient.publish(publishTopic.c_str(), messagePayload.c_str(), true);
-          
-          if (!published) {
-            Serial.println("Failed to publish message");
-          } else {
-            Serial.println("Message published successfully");
-            lastPublishTime = currentTime; // Update the publish timestamp
-          }
+          publishState();
         }
       }
     } else {

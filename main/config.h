@@ -54,21 +54,29 @@ extern Target storeTarget;
 extern Target cureTarget;
 extern Target dryTarget;
 
-void setupMQTT();
+// Conversion functions
 Cycle stringToCycle(String cycle);
 String cycleToString(Cycle cycle);
 StepMode stringToStepMode(String stepMode);
 String stepModeToString(StepMode stepMode);
+
+// MQTT functions
+void setupMQTT();
 void publishState();
+void publishTargets();
 void commandCallback(StaticJsonDocument<200> doc);
 void timeLeftReachedZeroCallback();
 void measureMetrics();
+
+// BLE functions
 void setupBLE();
 void sendBleData(String data);
 void bleDataReceiveCallback(String receivedData); 
 
+// Server functions
 bool askServerForDeviceInfo(String machineId, String &ownerId, String &deviceName);
 
+// Storage functions
 String getDeviceId();
 bool getWiFiCredentials(String &ssid, String &password);
 void saveWiFiCredentials(const char* ssid, const char* password);

@@ -6,8 +6,9 @@
 #include <ArduinoJson.h>
 
 // MQTT topic for IR sensor
-const char* topic_publish_ir = "state";
-const char* topic_subscribe_ir = "command";
+const char* topic_publish_state = "state";
+const char* topic_publish_targets = "targets";
+const char* topic_subscribe_command = "command";
 
 // MQTT thread parameters
 TaskHandle_t mqttTaskHandle = NULL;
@@ -46,7 +47,7 @@ StepMode stringToStepMode(String stepMode) {
   if (stepMode == "slope") return slope;
   return step;
 }
-// TODO: Create a separate topic only for targets and only publish targets on connect or when a command is received
+
 void publishState()
 {
   StaticJsonDocument<200> doc;
@@ -56,6 +57,27 @@ void publishState()
   doc["isPlaying"] = state.isPlaying;
   doc["timeLeft"] = state.timeLeft/1000;
   doc["cycle"] = cycleToString(state.cycle);
+  // Serialize to string
+  String messagePayload;
+  serializeJson(doc, messagePayload);
+
+  Serial.println(messagePayload);
+
+  // Publish with QoS 1 to deviceId()/temperature
+    String publishTopic = getOwnerId() + "/" + getDeviceId() + "/" + topic_publish_state;
+  bool published = mqttClient.publish(publishTopic.c_str(), messagePayload.c_str(), true);
+
+  if (!published) {
+    Serial.println("Failed to publish message");
+  } else {
+    Serial.println("Message published successfully");
+  }
+  lastPublishTime = millis(); 
+}
+
+void publishTargets()
+{
+  StaticJsonDocument<200> doc;
   doc["storeTargetTemperature"] = storeTarget.temperature;
   doc["storeTargetDewPoint"] = storeTarget.dewPoint;
   doc["storeTargetTime"] = storeTarget.time;
@@ -75,7 +97,7 @@ void publishState()
   Serial.println(messagePayload);
 
   // Publish with QoS 1 to deviceId()/temperature
-  String publishTopic = getOwnerId() + "/" + getDeviceId() + "/" + topic_publish_ir;
+  String publishTopic = getOwnerId() + "/" + getDeviceId() + "/" + topic_publish_targets;
   bool published = mqttClient.publish(publishTopic.c_str(), messagePayload.c_str(), true);
 
   if (!published) {
@@ -98,9 +120,9 @@ void callback(char* topic, byte* payload, unsigned int length) {
   Serial.print("Message: ");
   Serial.println(message);
   
-  // Check if it's the frequency topic
+  // Check if it's the command topic
   String topicStr = String(topic);
-  if (topicStr.endsWith(topic_subscribe_ir)) {
+  if (topicStr.endsWith(topic_subscribe_command)) {
     // parse {"command":"advanceCycle","cycle":"dry"}
     StaticJsonDocument<200> doc;
     deserializeJson(doc, message);
@@ -153,12 +175,12 @@ void reconnect() {
     if (mqttClient.connect(clientId, mqtt_username, mqtt_password)) {
       Serial.println("Connected to MQTT Broker.");
       
-      // Subscribe to frequency topic with device ID prefix
+      // Subscribe to command topic with device ID prefix
       String ownerId = getOwnerId();
       if (ownerId == "null") {
         ownerId = "Unregistered";
       }
-      String subscriptionTopic = ownerId + "/" + getDeviceId() + "/" + topic_subscribe_ir;
+      String subscriptionTopic = ownerId + "/" + getDeviceId() + "/" + topic_subscribe_command;
       mqttClient.subscribe(subscriptionTopic.c_str());
       Serial.print("Subscribed to: ");
       Serial.println(subscriptionTopic);
@@ -203,7 +225,6 @@ void mqttTask(void *parameter) {
         // This is where the callback happens - inside mqttClient.loop()
         mqttClient.loop();
         
-        // Check if it's time to publish based on frequency
         unsigned long currentTime = millis();
         
         if (currentTime - lastPublishTime >= MQTT_PUBLISH_INTERVAL_MS * 1000) {

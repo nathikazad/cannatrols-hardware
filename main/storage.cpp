@@ -58,8 +58,7 @@ bool ownerIdIsNone() {
 }
 
 void saveTargets() {
-  preferences.begin("state", false);
-  preferences.putString("cycle", cycleToString(state.cycle));
+  preferences.begin("targets", false);
   preferences.putFloat("storeTargetTemperature", storeTarget.temperature);
   preferences.putFloat("storeTargetDewPoint", storeTarget.dewPoint);
   preferences.putFloat("storeTargetTime", storeTarget.time);
@@ -76,8 +75,7 @@ void saveTargets() {
 }
 
 void loadTargets() {
-  preferences.begin("state", false);
-  state.cycle = stringToCycle(preferences.getString("cycle", "store"));
+  preferences.begin("targets", false);
   storeTarget.temperature = preferences.getFloat("storeTargetTemperature", 68.0);
   storeTarget.dewPoint = preferences.getFloat("storeTargetDewPoint", 54.0);
   storeTarget.time = preferences.getFloat("storeTargetTime", 0);
@@ -92,4 +90,29 @@ void loadTargets() {
   dryTarget.stepMode = stringToStepMode(preferences.getString("dryTargetStepMode", "step"));
   preferences.end();
 }
+
+void saveState() {
+  preferences.begin("state", false);
+  preferences.putString("cycle", cycleToString(state.cycle));
+  preferences.putFloat("temperature", state.temperature);
+  preferences.putFloat("humidity", state.humidity);
+  preferences.putFloat("dewPoint", state.dewPoint);
+  preferences.putLong("timeLeft", state.timeLeft);
+  preferences.putBool("isPlaying", state.isPlaying);
+  preferences.end();
+}
+
+void loadState() {
+  preferences.begin("state", false);
+  state.cycle = stringToCycle(preferences.getString("cycle", "store"));
+  state.temperature = preferences.getFloat("temperature", 0);
+  state.humidity = preferences.getFloat("humidity", 0);
+  state.dewPoint = preferences.getFloat("dewPoint", 0);
+  state.timeLeft = preferences.getLong("timeLeft", 0);
+  state.isPlaying = preferences.getBool("isPlaying", false);
+  preferences.end();
+}
+
+
+
 

@@ -12,6 +12,7 @@ bool wifiConnectionInProgress = false;
 void setup() {
   Serial.begin(115200);
   loadTargets();    
+  loadState();
   setupBLE();
   setupMQTT();
 }

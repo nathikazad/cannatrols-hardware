@@ -16,6 +16,7 @@ TaskHandle_t mqttTaskHandle = NULL;
 // Publishing control
 unsigned long lastPublishTime = 0;
 unsigned long lastRunTime = 0;
+unsigned long lastSaveTime = 0;
 
 void mqttTask(void *parameter);
 
@@ -48,7 +49,14 @@ StepMode stringToStepMode(String stepMode) {
   return step;
 }
 
-void publishState()
+void saveStateIfNeeded(bool forceSave) {
+  if (forceSave || millis() - lastSaveTime >= STATE_SAVE_INTERVAL_MS * 1000) {
+    saveState();
+    lastSaveTime = millis();
+  }
+}
+
+void publishState(bool forceSave)
 {
   StaticJsonDocument<200> doc;
   doc["temperature"] = state.temperature;
@@ -73,6 +81,7 @@ void publishState()
     // Serial.println("Message published successfully");
   }
   lastPublishTime = millis(); 
+  saveStateIfNeeded(forceSave);
 }
 
 void publishTargets()
@@ -105,7 +114,6 @@ void publishTargets()
   } else {
     Serial.println("Targets published successfully");
   }
-  lastPublishTime = millis(); 
 }
 
 // Callback function for MQTT messages
@@ -203,7 +211,7 @@ void mqttTask(void *parameter) {
   
   // Run indefinitely
   for (;;) {
-    if((state.cycle == cure || state.cycle == dry) && state.isPlaying && state.timeLeft > 0) {
+    if((state.cycle == cure || state.cycle == dry) && state.isPlaying) {
       unsigned long timeElapsed = millis() - lastRunTime;
       if (timeElapsed > state.timeLeft) {
         timeElapsed = state.timeLeft;
@@ -215,6 +223,7 @@ void mqttTask(void *parameter) {
     }
     lastRunTime = millis();
     measureMetrics();
+    saveStateIfNeeded(false);
     // Check WiFi and MQTT connection
     if (WiFi.status() == WL_CONNECTED && !ownerIdIsNone()) {
       if (!mqttClient.connected()) {
@@ -229,7 +238,7 @@ void mqttTask(void *parameter) {
         
         if (currentTime - lastPublishTime >= MQTT_PUBLISH_INTERVAL_MS * 1000) {
           // Create a JSON document with timestamp for security
-          publishState();
+          publishState(false);
         }
       }
     } else {

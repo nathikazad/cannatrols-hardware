@@ -16,8 +16,7 @@ void commandCallback(StaticJsonDocument<200> doc) {
       state.timeLeft = 0;
     }
     state.isPlaying = true;
-    saveTargets();
-    publishState();
+    publishState(true);
   } else if (command == "setTargets") { // This gets called when the targets are set
     String cycle = doc["cycle"];
     Serial.println("setTargets for "+cycle);
@@ -40,17 +39,17 @@ void commandCallback(StaticJsonDocument<200> doc) {
     publishTargets();
   } else if (command == "pause") { // This gets called when the cycle is paused
     state.isPlaying = false;
-    publishState();
+    publishState(true);
   } else if (command == "play") { // This gets called when the cycle is played
     if (state.timeLeft == 0) {
       resetTimeLeft();
     }
     state.isPlaying = true;
-    publishState();
+    publishState(true);
   } else if (command == "restart") { // This gets called when the cycle is restarted
     state.isPlaying = true;
     resetTimeLeft();
-    publishState();
+    publishState(true);
   } 
   
 }
@@ -74,9 +73,11 @@ void timeLeftReachedZeroCallback() {
     state.cycle = store;
     state.timeLeft = 0;
   }
+  publishState(true);
 }
 
 // This gets called every 10ms
+// Simulating data for now
 void measureMetrics() {
   double targetTemperature = 0;
   double targetDewPoint = 0;
@@ -90,7 +91,7 @@ void measureMetrics() {
     targetTemperature = dryTarget.temperature;
     targetDewPoint = dryTarget.dewPoint;
   }
-  // Simulating data for now
+
   state.temperature = targetTemperature + (rand() % 20)/10.0;
   state.temperature = round(state.temperature * 10) / 10.0;
   state.humidity = 57.0 + (rand() % 4);

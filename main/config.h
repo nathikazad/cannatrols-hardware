@@ -6,6 +6,7 @@
 #include <ArduinoJson.h>
 
 #define MQTT_PUBLISH_INTERVAL_MS 10 // in seconds
+#define STATE_SAVE_INTERVAL_MS 60 // in seconds
 
 extern bool deviceConnected;
 extern bool isAuthenticated;
@@ -62,7 +63,7 @@ String stepModeToString(StepMode stepMode);
 
 // MQTT functions
 void setupMQTT();
-void publishState();
+void publishState(bool forceSave);
 void publishTargets();
 void commandCallback(StaticJsonDocument<200> doc);
 void timeLeftReachedZeroCallback();
@@ -87,4 +88,6 @@ void saveOwnerId(const String &ownerId);
 bool ownerIdIsNone();
 void saveTargets();
 void loadTargets();
+void saveState();
+void loadState();
 #endif // CONFIG_H

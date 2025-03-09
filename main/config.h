@@ -85,6 +85,6 @@ String getDeviceName();
 String getOwnerId();
 void saveOwnerId(const String &ownerId);
 bool ownerIdIsNone();
-void saveState();
-void loadState();
+void saveTargets();
+void loadTargets();
 #endif // CONFIG_H

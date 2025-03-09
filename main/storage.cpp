@@ -46,7 +46,7 @@ void saveOwnerId(const String &ownerId) {
   Serial.println("Owner id saved: " + ownerId);
 }
 
-void saveState() {
+void saveTargets() {
   preferences.begin("state", false);
   preferences.putString("cycle", cycleToString(state.cycle));
   preferences.putFloat("storeTargetTemperature", storeTarget.temperature);
@@ -64,7 +64,7 @@ void saveState() {
   preferences.end();
 }
 
-void loadState() {
+void loadTargets() {
   preferences.begin("state", false);
   state.cycle = stringToCycle(preferences.getString("cycle", "store"));
   storeTarget.temperature = preferences.getFloat("storeTargetTemperature", 68.0);
@@ -81,6 +81,7 @@ void loadState() {
   dryTarget.stepMode = stringToStepMode(preferences.getString("dryTargetStepMode", "step"));
   preferences.end();
 }
+
 
 String getOwnerId() {
   preferences.begin("owner", false);

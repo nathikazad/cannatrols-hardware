@@ -9,7 +9,7 @@ Target dryTarget;
 
 void setup() {
   Serial.begin(115200);
-  loadState();
+  loadTargets();
   String ssid, password;
   bool wifiCredentialsSet = getWiFiCredentials(ssid, password);
   if (wifiCredentialsSet) {

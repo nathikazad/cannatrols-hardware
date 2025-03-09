@@ -70,7 +70,7 @@ void publishState()
   if (!published) {
     Serial.println("Failed to publish message");
   } else {
-    Serial.println("Message published successfully");
+    // Serial.println("Message published successfully");
   }
   lastPublishTime = millis(); 
 }
@@ -78,18 +78,18 @@ void publishState()
 void publishTargets()
 {
   StaticJsonDocument<200> doc;
-  doc["storeTargetTemperature"] = storeTarget.temperature;
-  doc["storeTargetDewPoint"] = storeTarget.dewPoint;
-  doc["storeTargetTime"] = storeTarget.time;
-  doc["storeTargetStepMode"] = stepModeToString(storeTarget.stepMode);
-  doc["cureTargetTemperature"] = cureTarget.temperature;
-  doc["cureTargetDewPoint"] = cureTarget.dewPoint;
-  doc["cureTargetTime"] = cureTarget.time;
-  doc["cureTargetStepMode"] = stepModeToString(cureTarget.stepMode);
-  doc["dryTargetTemperature"] = dryTarget.temperature;
-  doc["dryTargetDewPoint"] = dryTarget.dewPoint;
-  doc["dryTargetTime"] = dryTarget.time;
-  doc["dryTargetStepMode"] = stepModeToString(dryTarget.stepMode);
+  doc["stemp"] = storeTarget.temperature;
+  doc["sdp"] = storeTarget.dewPoint;
+  doc["stime"] = storeTarget.time;
+  doc["ssm"] = stepModeToString(storeTarget.stepMode);
+  doc["ctemp"] = cureTarget.temperature;
+  doc["cdp"] = cureTarget.dewPoint;
+  doc["ctime"] = cureTarget.time;
+  doc["csm"] = stepModeToString(cureTarget.stepMode);
+  doc["dtemp"] = dryTarget.temperature;
+  doc["ddp"] = dryTarget.dewPoint;
+  doc["dtime"] = dryTarget.time;
+  doc["dsm"] = stepModeToString(dryTarget.stepMode);
   // Serialize to string
   String messagePayload;
   serializeJson(doc, messagePayload);
@@ -103,7 +103,7 @@ void publishTargets()
   if (!published) {
     Serial.println("Failed to publish message");
   } else {
-    Serial.println("Message published successfully");
+    Serial.println("Targets published successfully");
   }
   lastPublishTime = millis(); 
 }

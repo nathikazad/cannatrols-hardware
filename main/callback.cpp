@@ -8,26 +8,35 @@ void commandCallback(StaticJsonDocument<200> doc) {
   if (command == "advanceCycle") { // This gets called when the cycle is advanced
     String cycle = doc["cycle"];
     state.cycle = stringToCycle(cycle);
-    state.timeLeft = 0;
-    state.isPlaying = false;
-    saveState();
+    if (state.cycle == dry) {
+      state.timeLeft = dryTarget.time * 1000;
+    } else if (state.cycle == cure) {
+      state.timeLeft = cureTarget.time * 1000;
+    } else if (state.cycle == store) {
+      state.timeLeft = 0;
+    }
+    state.isPlaying = true;
+    saveTargets();
     publishState();
   } else if (command == "setTargets") { // This gets called when the targets are set
     String cycle = doc["cycle"];
+    Serial.println("setTargets for "+cycle);
     Target target;
     target.temperature = round(doc["targetTemperature"].as<float>() * 10) / 10.0;
     target.dewPoint = round(doc["targetDewPoint"].as<float>() * 10) / 10.0;
     target.time = doc["targetTime"];
     target.stepMode = stringToStepMode(doc["stepMode"]);
-    if (cycle == "home") {
+    if (cycle == "store") {
       storeTarget = target;
     } else if (cycle == "cure") {
       cureTarget = target;
     } else if (cycle == "dry") {
       dryTarget = target;
     }
+    saveTargets();
     publishTargets();
   } else if (command == "getTargets") { // This gets called when the home target is set
+    Serial.println("getTargets");
     publishTargets();
   } else if (command == "pause") { // This gets called when the cycle is paused
     state.isPlaying = false;
@@ -57,8 +66,14 @@ void resetTimeLeft() {
 }
 // This gets called when the timeLeft reaches 0
 void timeLeftReachedZeroCallback() {
-  state.isPlaying = false;
-  // Should advance to next cycle?
+  // Should advance to next cycle
+ if (state.cycle == dry) {
+    state.cycle = cure;
+    state.timeLeft = cureTarget.time * 1000;
+  } else if (state.cycle == cure) {
+    state.cycle = store;
+    state.timeLeft = 0;
+  }
 }
 
 // This gets called every 10ms

@@ -7,45 +7,55 @@ Target storeTarget;
 Target cureTarget;
 Target dryTarget;
 
+bool wifiConnectionInProgress = false;
+
 void setup() {
   Serial.begin(115200);
-  loadTargets();
-  String ssid, password;
-  bool wifiCredentialsSet = getWiFiCredentials(ssid, password);
-  if (wifiCredentialsSet) {
-    Serial.println("Found stored WiFi credentials. Connecting to: " + ssid);
-    bool wifiConnected = connectToWifi(ssid.c_str(), password.c_str());
-    if(wifiConnected) {
-      Serial.println("\nConnected to WiFi!");
-      Serial.println("IP address: " + WiFi.localIP().toString());
-      fetchAndSaveOwnerId();
-    } else {
-      Serial.println("\nFailed to connect to WiFi.");
-    }
-    
-  } else {
-    Serial.println("No WiFi credentials stored.");
-  }
-  
+  loadTargets();    
   setupBLE();
   setupMQTT();
 }
 
-bool connectToWifi(const char* ssid, const char* password) {
-  if (WiFi.status() == WL_CONNECTED) {
-    Serial.println("Disconnecting from current WiFi network");
-    WiFi.disconnect(true);
-    delay(1000); // Brief delay to ensure disconnect completes
-  }
-  WiFi.begin(ssid, password);
-  // Wait for connection with timeout
-  int timeout = 20; // 10 seconds timeout (20 * 500ms)
-  while (WiFi.status() != WL_CONNECTED && timeout > 0) {
-    delay(500);
-    Serial.print(".");
-    timeout--;
+bool connectToWifi() {
+  // Prevent concurrent WiFi connection attempts
+  if (wifiConnectionInProgress) {
+    Serial.println("WiFi connection already in progress, skipping");
+    return false;
   }
   
+  wifiConnectionInProgress = true;
+  
+  String ssid, password;
+  bool wifiCredentialsSet = getWiFiCredentials(ssid, password);
+  if (wifiCredentialsSet) {
+    Serial.println("Found stored WiFi credentials. Connecting to: " + ssid);
+    if (WiFi.status() == WL_CONNECTED) {
+      Serial.println("Disconnecting from current WiFi network");
+      WiFi.disconnect(true);
+      delay(1000); // Brief delay to ensure disconnect completes
+    }
+    WiFi.begin(ssid, password);
+    // Wait for connection with timeout
+    int timeout = 20; // 10 seconds timeout (20 * 500ms)
+    while (WiFi.status() != WL_CONNECTED && timeout > 0) {
+      delay(500);
+      Serial.print(".");
+      timeout--;
+    }
+    if (WiFi.status() == WL_CONNECTED) {
+      sendBleData("WIFI_CONNECTED:SUCCESS");
+      Serial.println("\nConnected to WiFi!");
+      Serial.println("IP address: " + WiFi.localIP().toString());
+      fetchAndSaveOwnerId();
+    } else {
+      sendBleData("WIFI_CONNECTED:FAILED");
+      Serial.println("\nFailed to connect to WiFi.");
+    }
+  } else {
+    Serial.println("No WiFi credentials stored.");
+  }
+  
+  wifiConnectionInProgress = false;
   return (WiFi.status() == WL_CONNECTED);
 }
 
@@ -89,12 +99,7 @@ void bleDataReceiveCallback(String receivedData) {
       String ssid = credentials.substring(0, commaIndex);
       String password = credentials.substring(commaIndex + 1);
       saveWiFiCredentials(ssid.c_str(), password.c_str());
-      bool wifiConnected = connectToWifi(ssid.c_str(), password.c_str());
-      if(wifiConnected) {
-        sendBleData("WIFI_CONNECTED:SUCCESS");
-      } else {
-        sendBleData("WIFI_CONNECTED:FAILED");
-      }
+      connectToWifi();
     } else {
       sendBleData("WIFI_CONNECTED:INVALID_FORMAT");
     }
@@ -121,15 +126,10 @@ void bleDataReceiveCallback(String receivedData) {
 }
 
 void loop() {
-  if (Serial.available() && deviceConnected && isAuthenticated) {
-    String input = Serial.readStringUntil('\n');
-    Serial.println("Received from Serial: " + input);
-    sendBleData(input);
+  
+  if (WiFi.status() != WL_CONNECTED) {
+    Serial.println("WiFi disconnected, trying to connect to it");
+    connectToWifi();
   }
-  delay(10);
+  delay(10000);
 }
-
-// break into two threads, one for ble and other for wifi
-// when wifi is available start writing state to MQTT every 5 minutes
-// create state variables and state machine
-// integrate UI

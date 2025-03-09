@@ -193,6 +193,11 @@ void setupBLE() {
 
 
 void sendBleData(String data) {
+  // if device is not connected, do not send data
+  if (!deviceConnected) {
+    Serial.println("Device not connected, skipping sendBleData");
+    return;
+  }
   pTxCharacteristic->setValue((uint8_t*)data.c_str(), data.length());
   pTxCharacteristic->notify();
 }

@@ -46,6 +46,17 @@ void saveOwnerId(const String &ownerId) {
   Serial.println("Owner id saved: " + ownerId);
 }
 
+String getOwnerId() {
+  preferences.begin("owner", false);
+  String ownerId = preferences.getString("id", "NONE");
+  preferences.end();
+  return ownerId;
+}
+
+bool ownerIdIsNone() {
+  return getOwnerId().equals("None");
+}
+
 void saveTargets() {
   preferences.begin("state", false);
   preferences.putString("cycle", cycleToString(state.cycle));
@@ -80,17 +91,5 @@ void loadTargets() {
   dryTarget.time = preferences.getFloat("dryTargetTime", 0);
   dryTarget.stepMode = stringToStepMode(preferences.getString("dryTargetStepMode", "step"));
   preferences.end();
-}
-
-
-String getOwnerId() {
-  preferences.begin("owner", false);
-  String ownerId = preferences.getString("id", "NONE");
-  preferences.end();
-  return ownerId;
-}
-
-bool ownerIdIsNone() {
-  return getOwnerId().equals("None");
 }
 
